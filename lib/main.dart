@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'form_mahasiswa.dart';
+import 'form_dosen.dart';
+import 'form_matkul.dart';
 
 void main() => runApp(const MyApp());
 
@@ -13,11 +15,13 @@ class MyApp extends StatelessWidget {
       title: 'Aplikasi Form Mahasiswa',
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.pink),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 103, 153, 255)),
       ),
       home: const MainWithDrawer(),
       routes: {
         '/form': (_) => const FormMahasiswaPage(),
+        '/formdosen' : (_) => const FormDosenPage(),
+        '/formmatkul' : (_) => const FormMatkulPage(),
         '/list': (_) => const DaftarMahasiswaPage(),
         '/tentang': (_) => const TentangAplikasiPage(),
         '/pengaturan': (_) => const PengaturanPage(),
@@ -51,6 +55,22 @@ class MainWithDrawer extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/form');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('Form Dosen'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/formdosen');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.book),
+              title: const Text('Form Mata Kuliah'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/formmatkul');
               },
             ),
             ListTile(

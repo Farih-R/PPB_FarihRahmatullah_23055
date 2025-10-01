@@ -80,14 +80,14 @@ class _FormMahasiswaPageState extends State<FormMahasiswaPage> {
     }
 
     final data = {
-      'nama': cNama.text.trim(),
-      'npm': cNpm.text.trim(),
-      'email': cEmail.text.trim(),
-      'alamat': cAlamat.text.trim(),
-      'fakultas': cFakultas.text.trim(),
-      'jurusan': cJurusan.text.trim(),
-      'tglLahir': tglLahirLabel,
-      'jamBimbingan': jamLabel,
+      'Nama': cNama.text.trim(),
+      'NPM': cNpm.text.trim(),
+      'Email': cEmail.text.trim(),
+      'Alamat': cAlamat.text.trim(),
+      'Fakultas': cFakultas.text.trim(),
+      'Jurusan': cJurusan.text.trim(),
+      'Tanggal Lahir': tglLahirLabel,
+      'Jam Bimbing': jamLabel,
     };
 
     showDialog(
