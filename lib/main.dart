@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'form_mahasiswa.dart';
 
 void main() => runApp(const MyApp());
 
@@ -16,6 +17,7 @@ class MyApp extends StatelessWidget {
       ),
       home: const MainWithDrawer(),
       routes: {
+        '/form': (_) => const FormMahasiswaPage(),
         '/list': (_) => const DaftarMahasiswaPage(),
         '/tentang': (_) => const TentangAplikasiPage(),
         '/pengaturan': (_) => const PengaturanPage(),
