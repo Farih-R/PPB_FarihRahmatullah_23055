@@ -1,10 +1,14 @@
-# flutter_academic
+# Flutter Kuliah
 
 A new Flutter project.
 
 ## Getting Started
 
 This project is a starting point for a Flutter application.
+
+Nama : Farih Rahmatullah
+Kelas : 5A Sistem Informasi
+NPM : 2310631250055
 
 A few resources to get you started if this is your first Flutter project:
 
