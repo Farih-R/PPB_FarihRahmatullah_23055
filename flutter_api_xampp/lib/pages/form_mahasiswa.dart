@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-
 class FormMahasiswaPage extends StatefulWidget {
   const FormMahasiswaPage({super.key});
 
@@ -10,25 +9,22 @@ class FormMahasiswaPage extends StatefulWidget {
 }
 
 class _FormMahasiswaPageState extends State<FormMahasiswaPage> {
-  // --- Form key & step
   final _formKey = GlobalKey<FormState>();
-  int _currentStep = 0; // hanya 1 step (index 0)
 
-  // --- Controller & field (BAGIAN 1)
   final cNama = TextEditingController();
   final cNpm = TextEditingController();
   final cEmail = TextEditingController();
   final cAlamat = TextEditingController();
- 
+
   DateTime? tglLahir;
   TimeOfDay? jamBimbingan;
 
   String get tglLahirLabel => tglLahir == null
-      ? 'Pilih tanggal'
+      ? 'Pilih tanggal lahir'
       : '${tglLahir!.day}/${tglLahir!.month}/${tglLahir!.year}';
 
   String get jamLabel =>
-      jamBimbingan == null ? 'Pilih jam' : jamBimbingan!.format(context);
+      jamBimbingan == null ? 'Pilih jam bimbingan' : jamBimbingan!.format(context);
 
   @override
   void dispose() {
@@ -40,186 +36,165 @@ class _FormMahasiswaPageState extends State<FormMahasiswaPage> {
   }
 
   Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final res = await showDatePicker(
+    final result = await showDatePicker(
       context: context,
       firstDate: DateTime(1970),
-      lastDate: DateTime(now.year + 1),
-      initialDate: DateTime(now.year - 18, now.month, now.day),
+      lastDate: DateTime(DateTime.now().year + 1),
+      initialDate: DateTime.now(),
     );
-    if (res != null) setState(() => tglLahir = res);
+
+    if (result != null) setState(() => tglLahir = result);
   }
 
-  Future<void> _pickTime() async {
-    final res = await showTimePicker(
+    Future<void> _pickTime() async {
+    final result = await showTimePicker(
       context: context,
       initialTime: const TimeOfDay(hour: 9, minute: 0),
     );
-    if (res != null) setState(() => jamBimbingan = res);
+
+    if (result != null) {
+      setState(() => jamBimbingan = result);
+    }
+  }
+
+  String formatTimeOfDay(TimeOfDay time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute:00'; // format MySQL
   }
 
   Future<void> _simpan() async {
-  if (!_formKey.currentState!.validate()) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Periksa kembali isian Anda.')),
-    );
-    return;
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Periksa kembali isian Anda')),
+      );
+      return;
+    }
+
+    if (tglLahir == null || jamBimbingan == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tanggal lahir & jam bimbingan wajib diisi')),
+      );
+      return;
+    }
+
+    final url = Uri.parse("http://192.168.18.7/flutter_api_Xampp/add_users.php");
+
+    final response = await http.post(url, body: {
+      "nama": cNama.text.trim(),
+      "npm": cNpm.text.trim(),
+      "email": cEmail.text.trim(),
+      "alamat": cAlamat.text.trim(),
+      "tgl_lahir": "${tglLahir!.year}-${tglLahir!.month}-${tglLahir!.day}",
+      "jam_bimbingan": formatTimeOfDay(jamBimbingan!),  // ← ini yang diperbaiki
+    });
+
+    if (response.statusCode == 200) {
+      Navigator.pop(context, "refresh");
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data berhasil disimpan')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal menyimpan data')),
+      );
+    }
   }
 
-  if (tglLahir == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Tanggal lahir belum dipilih')),
-    );
-    return;
-  }
-
-  if (jamBimbingan == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Jam bimbingan belum dipilih')),
-    );
-    return;
-  }
-
-  // URL API insert data
-  final url = Uri.parse("http://192.168.18.7/flutter_api_Xampp/add_users.php");
-
-  // kirim data ke API
-  final response = await http.post(url, body: {
-    "nama": cNama.text.trim(),
-    "npm": cNpm.text.trim(),
-    "email": cEmail.text.trim(),
-    "alamat": cAlamat.text.trim(),
-    "tgl_lahir": "${tglLahir!.year}-${tglLahir!.month}-${tglLahir!.day}",
-    "jam_bimbing": jamBimbingan!.format(context),
-  });
-
-  if (response.statusCode == 200) {
-    // sukses → kembali ke HomePage
-    Navigator.pop(context, "refresh");
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Data berhasil disimpan')),
-    );
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Gagal menyimpan data')),
+  InputDecoration _inputStyle(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      prefixIcon: Icon(icon),
     );
   }
-}
-
-  Widget _sectionTitle(String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 8, top: 8),
-    child: Text(
-      text,
-      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-    ),
-  );
 
   @override
   Widget build(BuildContext context) {
-    final steps = <Step>[
-      Step(
-        title: const Text('Identitas'),
-        isActive: true,
-        state: StepState.indexed,
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _sectionTitle('Data Pribadi'),
-            TextFormField(
-              controller: cNama,
-              decoration: const InputDecoration(
-                labelText: 'Nama Lengkap',
-                hintText: 'cth: Aulia Rahman',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person),
-              ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Nama wajib diisi' : null,
-            ),
-            const SizedBox(height: 10),
-            TextFormField(
-              controller: cNpm,
-              decoration: const InputDecoration(
-                labelText: 'NPM',
-                hintText: '231063*',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.numbers),
-              ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'NPM wajib diisi' : null,
-            ),
-            const SizedBox(height: 10),
-            TextFormField(
-              controller: cEmail,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                hintText: 'unsika123@gmail.com',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email),
-              ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Email wajib diisi' : null,
-            ),
-            const SizedBox(height: 10),
-            TextFormField(
-              controller: cAlamat,
-              decoration: const InputDecoration(
-                labelText: 'Alamat',
-                hintText: 'cth: Jl. Merdeka No. 123',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.home),
-              ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Alamat wajib diisi' : null,
-            ),
-        
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.cake_outlined),
-                    label: Text(tglLahirLabel),
-                    onPressed: _pickDate,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.schedule),
-                    label: Text(jamLabel),
-                    onPressed: _pickTime,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ];
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Form Mahasiswa — Bagian 1')),
-      body: Form(
-        key: _formKey,
-        child: Stepper(
-          type: StepperType.vertical,
-          currentStep: _currentStep, // selalu 0
-          steps: steps,
-          onStepContinue: _simpan, // tombol lanjut = Simpan untuk 1 step
-          onStepCancel: null, // tidak perlu tombol kembali
-          controlsBuilder: (context, details) {
-            return Row(
-              children: [
-                ElevatedButton.icon(
+      appBar: AppBar(
+        title: const Text('Form Mahasiswa'),
+        backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
+      ),
+
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+
+              TextFormField(
+                controller: cNama,
+                decoration: _inputStyle("Nama Lengkap", Icons.person),
+                validator: (v) => v!.isEmpty ? "Nama wajib diisi" : null,
+              ),
+
+              const SizedBox(height: 15),
+
+              TextFormField(
+                controller: cNpm,
+                decoration: _inputStyle("NPM", Icons.numbers),
+                validator: (v) => v!.isEmpty ? "NPM wajib diisi" : null,
+              ),
+
+              const SizedBox(height: 15),
+
+              TextFormField(
+                controller: cEmail,
+                decoration: _inputStyle("Email", Icons.email),
+                validator: (v) => v!.isEmpty ? "Email wajib diisi" : null,
+              ),
+
+              const SizedBox(height: 15),
+
+              TextFormField(
+                controller: cAlamat,
+                decoration: _inputStyle("Alamat", Icons.home),
+                validator: (v) => v!.isEmpty ? "Alamat wajib diisi" : null,
+              ),
+
+              const SizedBox(height: 20),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.cake),
+                      label: Text(tglLahirLabel),
+                      onPressed: _pickDate,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.schedule),
+                      label: Text(jamLabel),
+                      onPressed: _pickTime,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 25),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
                   icon: const Icon(Icons.check),
-                  label: const Text('Simpan'),
-                  onPressed: details.onStepContinue,
+                  label: const Text("Simpan", style: TextStyle(fontSize: 16)),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Colors.indigo,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: _simpan,
                 ),
-              ],
-            );
-          },
+              ),
+            ],
+          ),
         ),
       ),
     );
